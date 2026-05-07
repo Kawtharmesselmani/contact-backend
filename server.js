@@ -8,43 +8,58 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-db.query(`
-  CREATE TABLE IF NOT EXISTS messages (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100),
-    email VARCHAR(100),
-    message TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )
-`, (err) => {
-  if (err) {
-    console.error("Table error:", err);
-  } else {
+async function initializeDatabase() {
+  try {
+
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100),
+        email VARCHAR(100),
+        message TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     console.log("Table 'messages' is ready ✔");
+
+  } catch (err) {
+
+    console.error('Table error:', err);
+
   }
-});
+}
 
-app.post('/api/contact', (req, res) => {
-  const { name, email, message } = req.body;
+initializeDatabase();
 
-  const sql = `
-    INSERT INTO messages (name, email, message)
-    VALUES (?, ?, ?)
-  `;
+app.post('/api/contact', async (req, res) => {
 
-  db.query(sql, [name, email, message], (err, result) => {
-    if (err) {
-      console.error('Insert error:', err);
-      return res.status(500).json({
-        success: false,
-        error: err.message
-      });
-    }
+  try {
+
+    const { name, email, message } = req.body;
+
+    const sql = `
+      INSERT INTO messages (name, email, message)
+      VALUES (?, ?, ?)
+    `;
+
+    await db.query(sql, [name, email, message]);
 
     res.json({
       success: true
     });
-  });
+
+  } catch (err) {
+
+    console.error('Insert error:', err);
+
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
+
+  }
+
 });
 
 app.get('/', (req, res) => {
