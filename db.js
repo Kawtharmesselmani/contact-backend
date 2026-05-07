@@ -1,0 +1,14 @@
+const mysql = require('mysql2');
+
+// Establish connection using MySQL URL from environment variables
+const db = mysql.createConnection(process.env.MYSQL_URL);
+
+db.connect((err) => {
+  if (err) {
+    console.error('DB connection error:', err);
+  } else {
+    console.log('Connected to MySQL ✔');
+  }
+});
+
+module.exports = db;
